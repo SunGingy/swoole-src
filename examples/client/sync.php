@@ -1,6 +1,6 @@
 <?php
 $client = new swoole_client(SWOOLE_SOCK_TCP);
-$client->set(array('open_eof_check' => true, 'package_eof' => "\r\n\r\n"));
+//$client->set(array('open_eof_check' => true, 'package_eof' => "\r\n\r\n"));
 
 //$client = new swoole_client(SWOOLE_SOCK_UNIX_DGRAM, SWOOLE_SOCK_SYNC); //同步阻塞
 //if (!$client->connect(dirname(__DIR__).'/server/svr.sock', 0, -1, 1))

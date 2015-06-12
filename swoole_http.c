@@ -1331,8 +1331,8 @@ static PHP_METHOD(swoole_http_server, start)
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "Server is running. Unable to execute swoole_server::start.");
         RETURN_FALSE;
     }
-
-    serv = swoole_get_object(getThis());
+    zval *obj = getThis();
+    serv = swoole_get_object(obj);
     php_swoole_register_callback(serv);
 
     if (serv->open_websocket_protocol)

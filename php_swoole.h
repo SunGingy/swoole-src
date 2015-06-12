@@ -40,7 +40,7 @@
 #include "Client.h"
 #include "async.h"
 
-#define PHP_SWOOLE_VERSION  "1.7.18-alpha"
+#define PHP_SWOOLE_VERSION  "1.7.17"
 #define PHP_SWOOLE_CHECK_CALLBACK
 
 /**
@@ -223,26 +223,9 @@ inline char * sw_php_url_encode(char *value, size_t value_len, int* exten);
 #define sw_php_var_unserialize(rval, p, max, var_hash)\
 php_var_unserialize(*rval, p, max, var_hash)
 
-extern zval _sw_zval_data0;
-extern zval _sw_zval_data1;
-extern zval _sw_zval_data2;
-extern zval _sw_zval_data3;
-extern zval _sw_zval_data4;
-
-#define SW_MAKE_STD_ZVAL(p,o)    switch(o){                           \
-    case 0:                              \
-       { bzero(&_sw_zval_data0, sizeof(zval)); p = &_sw_zval_data0; break;}\
-    case 1:                              \
-       { bzero(&_sw_zval_data1, sizeof(zval)); p = &_sw_zval_data1; break;}\
-    case 2:                              \
-       { bzero(&_sw_zval_data2, sizeof(zval)); p = &_sw_zval_data2; break;}\
-    case 3:                              \
-       { bzero(&_sw_zval_data3, sizeof(zval)); p = &_sw_zval_data3; break;}\
-    case 4:                              \
-       { bzero(&_sw_zval_data4, sizeof(zval)); p = &_sw_zval_data4; break;}\
-    default:                             \
-        break;\
-    }
+#define SW_MAKE_STD_ZVAL(p,o) \
+zval p##data;\
+p = &p##data;
 
 #define SW_RETURN_STRINGL(z,l,t)                      \
                zval key;\
@@ -257,7 +240,7 @@ extern zval _sw_zval_data4;
 #define SW_RETURN_STRING(val, duplicate)     RETURN_STRING(val)
 #define sw_add_assoc_string(array, key, value, duplicate)   add_assoc_string(array, key, value)
 #define sw_zend_hash_copy(target,source,pCopyConstructor,tmp,size) zend_hash_copy(target,source,pCopyConstructor)
-#define sw_zend_register_internal_class_ex(entry,parent_ptr,str)    zend_register_internal_class_ex(entry,parent_ptr)
+#define sw_zend_register_internal_class_ex(entry,ptr,str)    zend_register_internal_class(entry)
 #define sw_zend_call_method_with_2_params(obj,ptr,what,char,return,name,cb)     zend_call_method_with_2_params(*obj,ptr,what,char,*return,name,cb)
 #define SW_ZVAL_STRINGL(z, s, l, dup)         ZVAL_STRINGL(z, s, l)
 #define SW_ZVAL_STRING(z,s,dup)               ZVAL_STRING(z,s)
@@ -343,22 +326,20 @@ int handle = (int)Z_OBJ_HANDLE(*object);
 
 static sw_inline void swoole_set_object(zval *object, void *ptr)
 {
-#if PHP_MAJOR_VERSION < 7
-    zend_object_handle handle = Z_OBJ_HANDLE_P(object);
+       #if PHP_MAJOR_VERSION < 7
+zend_object_handle handle = Z_OBJ_HANDLE_P(object);
 #else
-    int handle = (int) Z_OBJ_HANDLE(*object);
+int handle = (int)Z_OBJ_HANDLE(*object);
 #endif
     if (handle >= swoole_objects.size)
     {
-        uint32_t old_size = swoole_objects.size;
-        swoole_objects.size = old_size * 2;
+        swoole_objects.size = swoole_objects.size * 2;
         if (swoole_objects.size > SW_MAX_SOCKET_ID)
         {
             swoole_objects.size = SW_MAX_SOCKET_ID;
         }
         assert(handle < SW_MAX_SOCKET_ID);
         swoole_objects.array = erealloc(swoole_objects.array, swoole_objects.size);
-        bzero(swoole_objects.array + (old_size * sizeof(void*)), (swoole_objects.size - old_size) * sizeof(void**));
     }
     swoole_objects.array[handle] = ptr;
 }
